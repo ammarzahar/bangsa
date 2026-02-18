@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GroupVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum GroupStatus {
+  ACTIVE
+  PENDING_PAYMENT
+  SUSPENDED
+  INACTIVE
+}
+
+enum GroupRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum MembershipStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REMOVED
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+
+enum BillingInterval {
+  MONTHLY
+}
+
+enum PaymentProvider {
+  STRIPE
+  TOYYIBPAY
+  MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id              String             @id @default(uuid()) @db.Uuid
+  email           String             @unique
+  passwordHash    String
+  fullName        String?
+  isPlatformOwner Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  groupsOwned     Group[]            @relation("GroupOwner")
+  memberships     GroupMembership[]
+  profiles        MemberProfile[]
+  subscriptions   Subscription[]     @relation("SubscriptionOwner")
+  membershipReqs  MembershipRequest[] @relation("RequestUser")
+  reviewedReqs    MembershipRequest[] @relation("RequestReviewer")
+  approvedMembers GroupMembership[]  @relation("MembershipApprover")
+  auditLogs       AuditLog[]         @relation("AuditActor")
+
+  @@index([createdAt])
+}
+
+model Group {
+  id             String              @id @default(uuid()) @db.Uuid
+  slug           String              @unique
+  name           String
+  description    String?
+  logoUrl        String?
+  coverImageUrl  String?
+  visibility     GroupVisibility     @default(PUBLIC)
+  status         GroupStatus         @default(INACTIVE)
+  ownerId        String              @db.Uuid
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  owner          User                @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  memberships    GroupMembership[]
+  profiles       MemberProfile[]
+  subscription   Subscription?
+  membershipReqs MembershipRequest[]
+  auditLogs      AuditLog[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model GroupMembership {
+  id               String           @id @default(uuid()) @db.Uuid
+  groupId          String           @db.Uuid
+  userId           String           @db.Uuid
+  role             GroupRole        @default(MEMBER)
+  status           MembershipStatus @default(PENDING)
+  approvedByUserId String?          @db.Uuid
+  approvedAt       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  group            Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy       User?            @relation("MembershipApprover", fields: [approvedByUserId], references: [id])
+
+  @@unique([groupId, userId])
+  @@index([groupId, status])
+  @@index([userId, status])
+}
+
+model MemberProfile {
+  id           String   @id @default(uuid()) @db.Uuid
+  groupId      String   @db.Uuid
+  userId       String   @db.Uuid
+  username     String
+  photoUrl     String?
+  fullName     String
+  shortBio     String?
+  currentRole  String?
+  business     String?
+  city         String?
+  country      String?
+  linkedinUrl  String?
+  instagramUrl String?
+  facebookUrl  String?
+  websiteUrl   String?
+  isFeatured   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  group        Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@unique([groupId, username])
+  @@index([groupId, isFeatured])
+  @@index([groupId, city])
+  @@index([groupId, country])
+}
+
+model Plan {
+  id              String          @id @default(uuid()) @db.Uuid
+  code            String          @unique
+  name            String
+  description     String?
+  priceCents      Int
+  currency        String          @default("USD")
+  billingInterval BillingInterval @default(MONTHLY)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  subscriptions   Subscription[]
+
+  @@index([isActive])
+}
+
+model Subscription {
+  id                     String             @id @default(uuid()) @db.Uuid
+  ownerUserId            String             @db.Uuid
+  groupId                String?            @unique @db.Uuid
+  planId                 String             @db.Uuid
+  provider               PaymentProvider
+  status                 SubscriptionStatus @default(INCOMPLETE)
+  providerCustomerId     String?
+  providerSubscriptionId String?
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  gracePeriodEndsAt      DateTime?
+  canceledAt             DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  owner                  User               @relation("SubscriptionOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  group                  Group?             @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  plan                   Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payments               Payment[]
+
+  @@index([ownerUserId, status])
+  @@index([groupId, status])
+  @@index([currentPeriodEnd])
+}
+
+model Payment {
+  id                String          @id @default(uuid()) @db.Uuid
+  subscriptionId    String          @db.Uuid
+  provider          PaymentProvider
+  status            PaymentStatus   @default(PENDING)
+  amountCents       Int
+  currency          String          @default("USD")
+  externalPaymentId String?
+  paidAt            DateTime?
+  createdAt         DateTime        @default(now())
+  subscription      Subscription    @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId, status])
+}
+
+model MembershipRequest {
+  id               String        @id @default(uuid()) @db.Uuid
+  groupId          String        @db.Uuid
+  userId           String        @db.Uuid
+  status           RequestStatus @default(PENDING)
+  note             String?
+  reviewedByUserId String?       @db.Uuid
+  reviewedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  group            Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user             User          @relation("RequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy       User?         @relation("RequestReviewer", fields: [reviewedByUserId], references: [id])
+
+  @@unique([groupId, userId])
+  @@index([groupId, status])
+  @@index([userId, status])
+}
+
+model AuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  targetGroupId String?  @db.Uuid
+  actorUserId   String?  @db.Uuid
+  eventType     String
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  group         Group?   @relation(fields: [targetGroupId], references: [id], onDelete: SetNull)
+  actor         User?    @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([targetGroupId, createdAt])
+  @@index([eventType, createdAt])
+}
