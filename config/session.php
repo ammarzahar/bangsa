@@ -18,8 +18,8 @@ return [
     |
     */
 
-    'driver' => env('APP_ENV') === 'production' && env('SESSION_DRIVER') === 'array'
-        ? 'file'
+    'driver' => env('APP_ENV') === 'production'
+        ? 'cookie'
         : env('SESSION_DRIVER', 'database'),
 
     /*
