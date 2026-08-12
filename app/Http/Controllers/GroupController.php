@@ -41,8 +41,8 @@ class GroupController extends Controller
             ->orderBy('created_at')
             ->first();
 
-        if (!$subscription || !$subscription->isActiveWindow()) {
-            return back()->withErrors(['subscription' => 'An active subscription is required to create a group.']);
+        if ($request->user()->account_type === \App\Models\User::TYPE_ORGANISER_PLUS && (!$subscription || !$subscription->isActiveWindow())) {
+            return back()->withErrors(['subscription' => 'An active subscription is required for Organiser Plus features.']);
         }
 
         DB::transaction(function () use ($validated, $subscription, $request): void {
@@ -55,9 +55,10 @@ class GroupController extends Controller
                 'cover_image_url' => $validated['cover_image_url'] ?? null,
                 'status' => Group::STATUS_ACTIVE,
                 'owner_id' => $request->user()->id,
+                'invite_token' => Str::random(40),
             ]);
 
-            $subscription->update(['group_id' => $group->id]);
+            $subscription?->update(['group_id' => $group->id]);
 
             GroupMembership::query()->create([
                 'group_id' => $group->id,
@@ -86,13 +87,15 @@ class GroupController extends Controller
             ]);
         });
 
-        return redirect()->route('landing')->with('status', 'Group created successfully.');
+        return redirect()->route('dashboard.group', [$validated['slug']])->with('status', 'Group created successfully.');
     }
 
     public function show(Request $request, string $group_slug)
     {
         $group = $request->attributes->get('current_group');
-        $this->authorize('view', $group);
+        if (!$this->hasInviteAccess($request, $group)) {
+            $this->authorize('view', $group);
+        }
 
         $featuredMembers = MemberProfile::query()
             ->where('group_id', $group->id)
@@ -118,12 +121,31 @@ class GroupController extends Controller
         ]);
     }
 
+    public function invite(Request $request, string $group_slug, string $invite_token): RedirectResponse
+    {
+        $group = $request->attributes->get('current_group');
+
+        abort_unless(hash_equals((string) $group->invite_token, $invite_token), 404);
+
+        $request->session()->put("group_invites.{$group->id}", $invite_token);
+        $request->session()->put('url.intended', route('groups.show', [$group->slug]));
+
+        if (!$request->user()) {
+            return redirect()->route('login')->with('status', 'Sign in or create an account to join this private community.');
+        }
+
+        return redirect()->route('groups.show', [$group->slug])->with('status', 'Private invitation accepted.');
+    }
+
     public function settings(Request $request, string $group_slug)
     {
         $group = $request->attributes->get('current_group');
         $this->authorize('manage', $group);
 
-        return view('groups.settings', ['group' => $group]);
+        return view('groups.settings', [
+            'group' => $group,
+            'inviteUrl' => route('groups.invite', [$group->slug, $group->invite_token]),
+        ]);
     }
 
     public function updateSettings(Request $request, string $group_slug): RedirectResponse
@@ -177,14 +199,28 @@ class GroupController extends Controller
             return false;
         }
 
-        if ($user->is_platform_owner) {
+        if ($user->isAdmin()) {
             return true;
         }
 
-        return GroupMembership::query()
-            ->where('user_id', $user->id)
-            ->where('status', GroupMembership::STATUS_APPROVED)
-            ->whereIn('role', [GroupMembership::ROLE_OWNER, GroupMembership::ROLE_ADMIN])
-            ->exists();
+        if (!$user->isOrganiser()) {
+            return false;
+        }
+
+        return Group::query()
+            ->where('owner_id', $user->id)
+            ->count() < 1;
+    }
+
+    private function hasInviteAccess(Request $request, Group $group): bool
+    {
+        if ($group->visibility !== Group::VISIBILITY_PRIVATE) {
+            return false;
+        }
+
+        return hash_equals(
+            (string) $group->invite_token,
+            (string) $request->session()->get("group_invites.{$group->id}")
+        );
     }
 }

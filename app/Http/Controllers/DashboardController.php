@@ -12,7 +12,7 @@ class DashboardController extends Controller
 {
     public function home(Request $request)
     {
-        if ($request->user()->is_platform_owner) {
+        if ($request->user()->isAdmin()) {
             return redirect()->route('dashboard.platform');
         }
 
@@ -30,6 +30,7 @@ class DashboardController extends Controller
 
         $groups = Group::query()
             ->where('status', Group::STATUS_ACTIVE)
+            ->where('visibility', Group::VISIBILITY_PUBLIC)
             ->orderByDesc('created_at')
             ->take(6)
             ->get();
@@ -41,7 +42,7 @@ class DashboardController extends Controller
 
     public function platform(Request $request)
     {
-        abort_unless($request->user()->is_platform_owner, 403);
+        abort_unless($request->user()->isAdmin(), 403);
 
         $activeSubscriptions = Subscription::query()
             ->with('plan')
@@ -75,7 +76,7 @@ class DashboardController extends Controller
     public function group(Request $request, string $group_slug)
     {
         $group = $request->attributes->get('current_group');
-        $isManager = $request->user()->is_platform_owner || GroupMembership::query()
+        $isManager = $request->user()->isAdmin() || GroupMembership::query()
             ->where('group_id', $group->id)
             ->where('user_id', $request->user()->id)
             ->where('status', GroupMembership::STATUS_APPROVED)

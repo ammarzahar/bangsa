@@ -11,7 +11,7 @@ class GroupMembershipPolicy
 {
     public function moderate(User $user, string $modelClass, Group $group): bool
     {
-        if ($user->is_platform_owner) {
+        if ($user->isAdmin()) {
             return true;
         }
 
@@ -25,11 +25,11 @@ class GroupMembershipPolicy
 
     public function updateProfile(User $user, string $modelClass, Group $group, string $targetUserId): bool
     {
-        if ($user->is_platform_owner || $user->id === $targetUserId) {
+        if ($user->isAdmin() || $user->id === $targetUserId) {
             return true;
         }
 
-        return $this->moderate($user, $group);
+        return $this->moderate($user, $modelClass, $group);
     }
 
     public function review(User $user, string $modelClass, Group $group, MembershipRequest $request): bool

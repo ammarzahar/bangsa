@@ -30,7 +30,7 @@ class MembershipController extends Controller
             return back()->with('status', 'Your join request is already pending approval.');
         }
 
-        $this->authorize('join', $group);
+        abort_unless($this->canJoin($request, $group), 403);
 
         $validated = $request->validate([
             'note' => ['nullable', 'string', 'max:500'],
@@ -71,6 +71,26 @@ class MembershipController extends Controller
         });
 
         return back()->with('status', 'Membership request submitted.');
+    }
+
+    private function canJoin(Request $request, \App\Models\Group $group): bool
+    {
+        if ($group->status !== \App\Models\Group::STATUS_ACTIVE) {
+            return false;
+        }
+
+        if ($request->user()->isAdmin()) {
+            return true;
+        }
+
+        if ($group->visibility === \App\Models\Group::VISIBILITY_PUBLIC) {
+            return true;
+        }
+
+        return hash_equals(
+            (string) $group->invite_token,
+            (string) $request->session()->get("group_invites.{$group->id}")
+        );
     }
 
     public function requests(Request $request, string $group_slug)

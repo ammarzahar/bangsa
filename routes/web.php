@@ -26,6 +26,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/billing/subscriptions', [SubscriptionController::class, 'store'])->name('billing.subscriptions.store');
 
     Route::get('/dashboard/platform', [DashboardController::class, 'platform'])->name('dashboard.platform');
+    Route::get('/platform/users', [PlatformController::class, 'users'])->name('platform.users');
+    Route::patch('/platform/users/{userId}', [PlatformController::class, 'updateUser'])->name('platform.users.update');
     Route::get('/platform/groups', [PlatformController::class, 'groups'])->name('platform.groups');
     Route::post('/platform/groups/{groupId}/suspend', [PlatformController::class, 'suspend'])->name('platform.groups.suspend');
     Route::post('/platform/groups/{groupId}/activate', [PlatformController::class, 'activate'])->name('platform.groups.activate');
@@ -36,6 +38,9 @@ Route::prefix('/{group_slug}')
     ->middleware('resolve.group')
     ->group(function () {
         Route::get('/', [GroupController::class, 'show'])->name('groups.show');
+        Route::get('/invite/{invite_token}', [GroupController::class, 'invite'])
+            ->where(['invite_token' => '[A-Za-z0-9]{20,80}'])
+            ->name('groups.invite');
         Route::get('/members', [MemberProfileController::class, 'directory'])->name('groups.members.directory');
         Route::get('/member/{username}', [MemberProfileController::class, 'show'])
             ->where(['username' => '[a-z0-9-]{3,40}'])

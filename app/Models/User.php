@@ -14,6 +14,11 @@ class User extends Authenticatable
     use HasUuids;
     use Notifiable;
 
+    public const TYPE_USER = 'USER';
+    public const TYPE_ORGANISER = 'ORGANISER';
+    public const TYPE_ORGANISER_PLUS = 'ORGANISER_PLUS';
+    public const TYPE_ADMIN = 'ADMIN';
+
     public $incrementing = false;
     protected $keyType = 'string';
 
@@ -21,6 +26,7 @@ class User extends Authenticatable
         'email',
         'password',
         'full_name',
+        'account_type',
         'is_platform_owner',
     ];
 
@@ -36,6 +42,33 @@ class User extends Authenticatable
             'is_platform_owner' => 'boolean',
             'password' => 'hashed',
         ];
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->is_platform_owner || $this->account_type === self::TYPE_ADMIN;
+    }
+
+    public function isOrganiser(): bool
+    {
+        return in_array($this->account_type, [self::TYPE_ORGANISER, self::TYPE_ORGANISER_PLUS, self::TYPE_ADMIN], true)
+            || $this->is_platform_owner;
+    }
+
+    public function isOrganiserPlus(): bool
+    {
+        return in_array($this->account_type, [self::TYPE_ORGANISER_PLUS, self::TYPE_ADMIN], true)
+            || $this->is_platform_owner;
+    }
+
+    public function accountTypeLabel(): string
+    {
+        return match ($this->account_type) {
+            self::TYPE_ORGANISER => 'Organiser',
+            self::TYPE_ORGANISER_PLUS => 'Organiser Plus',
+            self::TYPE_ADMIN => 'Admin',
+            default => 'User',
+        };
     }
 
     public function groupsOwned(): HasMany

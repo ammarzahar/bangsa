@@ -1,21 +1,10 @@
 @php
     $canCreateGroup = auth()->check() && (
-        auth()->user()->is_platform_owner ||
-        \App\Models\GroupMembership::query()
-            ->where('user_id', auth()->id())
-            ->where('status', \App\Models\GroupMembership::STATUS_APPROVED)
-            ->whereIn('role', [\App\Models\GroupMembership::ROLE_OWNER, \App\Models\GroupMembership::ROLE_ADMIN])
-            ->exists()
+        auth()->user()->isAdmin() ||
+        (auth()->user()->isOrganiser() && \App\Models\Group::query()->where('owner_id', auth()->id())->count() < 1)
     );
 
-    $canManageBilling = auth()->check() && (
-        auth()->user()->is_platform_owner ||
-        \App\Models\GroupMembership::query()
-            ->where('user_id', auth()->id())
-            ->where('status', \App\Models\GroupMembership::STATUS_APPROVED)
-            ->whereIn('role', [\App\Models\GroupMembership::ROLE_OWNER, \App\Models\GroupMembership::ROLE_ADMIN])
-            ->exists()
-    );
+    $canManageBilling = auth()->check() && auth()->user()->isOrganiser();
 @endphp
 
 <aside id="app-sidebar" class="fixed top-0 left-0 z-40 h-screen w-64 -translate-x-full border-r border-slate-200 bg-white pt-20 transition-transform lg:translate-x-0" aria-label="Sidebar">
@@ -43,12 +32,15 @@
                     <a href="{{ route('billing.subscriptions') }}" class="group flex items-center rounded-lg px-3 py-2 {{ request()->routeIs('billing.subscriptions') ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-100' }}">Subscriptions</a>
                 </li>
             @endif
-            @if(auth()->user()?->is_platform_owner)
+            @if(auth()->user()?->isAdmin())
                 <li>
                     <a href="{{ route('dashboard.platform') }}" class="group flex items-center rounded-lg px-3 py-2 {{ request()->routeIs('dashboard.platform') ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-100' }}">Platform Dashboard</a>
                 </li>
                 <li>
-                    <a href="{{ route('platform.groups') }}" class="group flex items-center rounded-lg px-3 py-2 {{ request()->routeIs('platform.*') ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-100' }}">Manage Groups</a>
+                    <a href="{{ route('platform.users') }}" class="group flex items-center rounded-lg px-3 py-2 {{ request()->routeIs('platform.users*') ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-100' }}">Manage Users</a>
+                </li>
+                <li>
+                    <a href="{{ route('platform.groups') }}" class="group flex items-center rounded-lg px-3 py-2 {{ request()->routeIs('platform.groups*') ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-100' }}">Manage Groups</a>
                 </li>
             @endif
         </ul>

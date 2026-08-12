@@ -68,7 +68,7 @@
             <input id="website_url" name="website_url" value="{{ old('website_url', $profile->website_url) }}" class="block w-full rounded-lg border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500">
         </div>
 
-        @if($isAdmin)
+        @if($canFeatureMembers)
             <div class="md:col-span-2">
                 <label class="inline-flex items-center gap-2 text-sm text-slate-700">
                     <input type="checkbox" name="is_featured" value="1" {{ old('is_featured', $profile->is_featured) ? 'checked' : '' }} class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">

@@ -34,6 +34,7 @@ class Group extends Model
         'visibility',
         'status',
         'owner_id',
+        'invite_token',
     ];
 
     public function owner(): BelongsTo

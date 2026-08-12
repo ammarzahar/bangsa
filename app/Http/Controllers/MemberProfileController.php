@@ -78,12 +78,8 @@ class MemberProfileController extends Controller
         return view('members.edit', [
             'group' => $group,
             'profile' => $profile,
-            'isAdmin' => $request->user()->is_platform_owner || GroupMembership::query()
-                ->where('group_id', $group->id)
-                ->where('user_id', $request->user()->id)
-                ->where('status', GroupMembership::STATUS_APPROVED)
-                ->whereIn('role', [GroupMembership::ROLE_OWNER, GroupMembership::ROLE_ADMIN])
-                ->exists(),
+            'isAdmin' => $this->canManageProfiles($request),
+            'canFeatureMembers' => $this->canFeatureMembers($request),
         ]);
     }
 
@@ -97,12 +93,8 @@ class MemberProfileController extends Controller
 
         $this->authorize('updateProfile', [GroupMembership::class, $group, $profile->user_id]);
 
-        $isAdmin = $request->user()->is_platform_owner || GroupMembership::query()
-            ->where('group_id', $group->id)
-            ->where('user_id', $request->user()->id)
-            ->where('status', GroupMembership::STATUS_APPROVED)
-            ->whereIn('role', [GroupMembership::ROLE_OWNER, GroupMembership::ROLE_ADMIN])
-            ->exists();
+        $isAdmin = $this->canManageProfiles($request);
+        $canFeatureMembers = $this->canFeatureMembers($request);
 
         $rules = [
             'username' => [
@@ -123,13 +115,13 @@ class MemberProfileController extends Controller
             'website_url' => ['nullable', 'url'],
         ];
 
-        if ($isAdmin) {
+        if ($canFeatureMembers) {
             $rules['is_featured'] = ['nullable', 'boolean'];
         }
 
         $validated = $request->validate($rules);
 
-        if (!$isAdmin) {
+        if (!$canFeatureMembers) {
             unset($validated['is_featured']);
         }
 
@@ -143,5 +135,25 @@ class MemberProfileController extends Controller
         ]);
 
         return redirect()->route('groups.member.show', [$group->slug, $profile->username])->with('status', 'Profile updated.');
+    }
+
+    private function canManageProfiles(Request $request): bool
+    {
+        $group = $request->attributes->get('current_group');
+
+        return $request->user()->isAdmin() || GroupMembership::query()
+            ->where('group_id', $group->id)
+            ->where('user_id', $request->user()->id)
+            ->where('status', GroupMembership::STATUS_APPROVED)
+            ->whereIn('role', [GroupMembership::ROLE_OWNER, GroupMembership::ROLE_ADMIN])
+            ->exists();
+    }
+
+    private function canFeatureMembers(Request $request): bool
+    {
+        $group = $request->attributes->get('current_group')->loadMissing('owner');
+
+        return $request->user()->isAdmin()
+            || ($this->canManageProfiles($request) && $group->owner?->isOrganiserPlus());
     }
 }

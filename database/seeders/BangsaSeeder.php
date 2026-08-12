@@ -22,6 +22,7 @@ class BangsaSeeder extends Seeder
             [
                 'full_name' => 'Platform Owner',
                 'password' => Hash::make('Bangsa123!'),
+                'account_type' => User::TYPE_ADMIN,
                 'is_platform_owner' => true,
                 'email_verified_at' => now(),
             ]

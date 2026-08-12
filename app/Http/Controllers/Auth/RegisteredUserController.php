@@ -34,6 +34,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('dashboard.home')->with('status', 'Account created. You are signed in.');
+        return redirect()->intended(route('dashboard.home'))->with('status', 'Account created. You are signed in.');
     }
 }

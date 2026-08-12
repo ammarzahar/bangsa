@@ -3,22 +3,11 @@
 @section('content')
 @php
     $canCreateGroup = auth()->check() && (
-        auth()->user()->is_platform_owner ||
-        \App\Models\GroupMembership::query()
-            ->where('user_id', auth()->id())
-            ->where('status', \App\Models\GroupMembership::STATUS_APPROVED)
-            ->whereIn('role', [\App\Models\GroupMembership::ROLE_OWNER, \App\Models\GroupMembership::ROLE_ADMIN])
-            ->exists()
+        auth()->user()->isAdmin() ||
+        (auth()->user()->isOrganiser() && \App\Models\Group::query()->where('owner_id', auth()->id())->count() < 1)
     );
 
-    $canManageBilling = auth()->check() && (
-        auth()->user()->is_platform_owner ||
-        \App\Models\GroupMembership::query()
-            ->where('user_id', auth()->id())
-            ->where('status', \App\Models\GroupMembership::STATUS_APPROVED)
-            ->whereIn('role', [\App\Models\GroupMembership::ROLE_OWNER, \App\Models\GroupMembership::ROLE_ADMIN])
-            ->exists()
-    );
+    $canManageBilling = auth()->check() && auth()->user()->isOrganiser();
 @endphp
 
 <section class="rounded-2xl bg-gradient-to-br from-slate-900 via-brand-900 to-slate-800 p-8 text-white lg:p-12">

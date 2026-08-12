@@ -18,7 +18,7 @@ class GroupPolicy
             return false;
         }
 
-        if ($user->is_platform_owner) {
+        if ($user->isAdmin()) {
             return true;
         }
 
@@ -31,7 +31,7 @@ class GroupPolicy
 
     public function manage(User $user, Group $group): bool
     {
-        if ($user->is_platform_owner) {
+        if ($user->isAdmin()) {
             return true;
         }
 
@@ -49,7 +49,7 @@ class GroupPolicy
             return false;
         }
 
-        if ($user->is_platform_owner) {
+        if ($user->isAdmin()) {
             return true;
         }
 

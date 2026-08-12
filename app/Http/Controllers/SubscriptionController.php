@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\GroupMembership;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\User;
 use App\Services\Payments\PaymentGatewayFactory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,6 +58,10 @@ class SubscriptionController extends Controller
             'grace_period_ends_at' => now()->addDays(37),
         ]);
 
+        if ($request->user()->account_type === User::TYPE_ORGANISER) {
+            $request->user()->update(['account_type' => User::TYPE_ORGANISER_PLUS]);
+        }
+
         return redirect()->route('billing.subscriptions')->with('status', 'Subscription created. '.$session['message']);
     }
 
@@ -66,14 +71,10 @@ class SubscriptionController extends Controller
             return false;
         }
 
-        if ($user->is_platform_owner) {
+        if ($user->isAdmin()) {
             return true;
         }
 
-        return GroupMembership::query()
-            ->where('user_id', $user->id)
-            ->where('status', GroupMembership::STATUS_APPROVED)
-            ->whereIn('role', [GroupMembership::ROLE_OWNER, GroupMembership::ROLE_ADMIN])
-            ->exists();
+        return $user->isOrganiser();
     }
 }

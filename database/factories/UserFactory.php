@@ -16,6 +16,7 @@ class UserFactory extends Factory
             'full_name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'account_type' => \App\Models\User::TYPE_USER,
             'is_platform_owner' => false,
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),

@@ -6,7 +6,10 @@
         <h1 class="bangsa-heading">Platform Dashboard</h1>
         <p class="mt-1 text-sm text-slate-600">Monitor total groups, membership growth, and recurring revenue.</p>
     </div>
-    <a href="{{ route('platform.groups') }}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Manage Groups</a>
+    <div class="flex gap-2">
+        <a href="{{ route('platform.users') }}" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">Manage Users</a>
+        <a href="{{ route('platform.groups') }}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Manage Groups</a>
+    </div>
 </div>
 
 <div class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
