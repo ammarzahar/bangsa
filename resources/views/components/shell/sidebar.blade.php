@@ -25,6 +25,9 @@
                 <a href="{{ route('dashboard.home') }}" class="group flex items-center rounded-lg px-3 py-2 {{ request()->routeIs('dashboard.home') ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-100' }}">Dashboard</a>
             </li>
             <li>
+                <a href="{{ route('profile.edit') }}" class="group flex items-center rounded-lg px-3 py-2 {{ request()->routeIs('profile.*') ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-100' }}">Profile</a>
+            </li>
+            <li>
                 <a href="{{ route('landing') }}" class="group flex items-center rounded-lg px-3 py-2 {{ request()->routeIs('landing') ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-100' }}">Home</a>
             </li>
             @if($canCreateGroup)
