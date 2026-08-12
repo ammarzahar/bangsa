@@ -28,7 +28,15 @@ class DashboardController extends Controller
             return redirect()->route('dashboard.group', [$membership->group->slug]);
         }
 
-        return redirect()->route('landing')->with('status', 'No group membership found yet.');
+        $groups = Group::query()
+            ->where('status', Group::STATUS_ACTIVE)
+            ->orderByDesc('created_at')
+            ->take(6)
+            ->get();
+
+        return view('dashboard.home', [
+            'groups' => $groups,
+        ]);
     }
 
     public function platform(Request $request)
