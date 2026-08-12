@@ -7,6 +7,8 @@ use App\Models\Group;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class PlatformController extends Controller
@@ -101,5 +103,65 @@ class PlatformController extends Controller
         ]);
 
         return back()->with('status', 'User account type updated.');
+    }
+
+    public function deleteUser(Request $request, string $userId): RedirectResponse
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+
+        if ($request->user()->id === $userId) {
+            return back()->withErrors(['users' => 'You cannot delete your own account.']);
+        }
+
+        $deleted = $this->deleteUsers($request, collect([$userId]));
+
+        return back()->with('status', "{$deleted} user deleted.");
+    }
+
+    public function bulkDeleteUsers(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+
+        $validated = $request->validate([
+            'user_ids' => ['required', 'array', 'min:1'],
+            'user_ids.*' => ['string', 'exists:users,id'],
+        ]);
+
+        $userIds = collect($validated['user_ids'])
+            ->reject(fn (string $userId) => $userId === $request->user()->id)
+            ->values();
+
+        if ($userIds->isEmpty()) {
+            return back()->withErrors(['users' => 'Select at least one user other than yourself.']);
+        }
+
+        $deleted = $this->deleteUsers($request, $userIds);
+
+        return back()->with('status', "{$deleted} users deleted.");
+    }
+
+    private function deleteUsers(Request $request, Collection $userIds): int
+    {
+        return DB::transaction(function () use ($request, $userIds): int {
+            Group::query()
+                ->whereIn('owner_id', $userIds)
+                ->delete();
+
+            $deleted = User::query()
+                ->whereIn('id', $userIds)
+                ->whereKeyNot($request->user()->id)
+                ->delete();
+
+            AuditLog::query()->create([
+                'actor_user_id' => $request->user()->id,
+                'event_type' => 'USERS_DELETED',
+                'metadata' => [
+                    'user_ids' => $userIds->values()->all(),
+                    'deleted_count' => $deleted,
+                ],
+            ]);
+
+            return $deleted;
+        });
     }
 }

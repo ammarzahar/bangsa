@@ -130,6 +130,54 @@ class RoleAccessTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_delete_user_from_manage_users(): void
+    {
+        $admin = $this->user('admin@example.com', User::TYPE_ADMIN, true);
+        $user = $this->user('member@example.com', User::TYPE_USER);
+        $group = $this->group($user, [
+            'slug' => 'member-owned',
+            'name' => 'Member Owned',
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('platform.users.delete', [$user->id]))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+        $this->assertDatabaseMissing('groups', ['id' => $group->id]);
+    }
+
+    public function test_admin_can_bulk_delete_checked_users(): void
+    {
+        $admin = $this->user('admin@example.com', User::TYPE_ADMIN, true);
+        $first = $this->user('first@example.com', User::TYPE_USER);
+        $second = $this->user('second@example.com', User::TYPE_ORGANISER);
+        $untouched = $this->user('untouched@example.com', User::TYPE_USER);
+
+        $this->actingAs($admin)
+            ->delete(route('platform.users.bulk-delete'), [
+                'user_ids' => [$first->id, $second->id],
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('users', ['id' => $first->id]);
+        $this->assertDatabaseMissing('users', ['id' => $second->id]);
+        $this->assertDatabaseHas('users', ['id' => $untouched->id]);
+    }
+
+    public function test_admin_cannot_delete_own_account(): void
+    {
+        $admin = $this->user('admin@example.com', User::TYPE_ADMIN, true);
+
+        $this->actingAs($admin)
+            ->from(route('platform.users'))
+            ->delete(route('platform.users.delete', [$admin->id]))
+            ->assertRedirect(route('platform.users'))
+            ->assertSessionHasErrors('users');
+
+        $this->assertDatabaseHas('users', ['id' => $admin->id]);
+    }
+
     public function test_organiser_subscription_upgrades_account_to_plus(): void
     {
         $organiser = $this->user('organiser@example.com', User::TYPE_ORGANISER);

@@ -28,6 +28,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/platform', [DashboardController::class, 'platform'])->name('dashboard.platform');
     Route::get('/platform/users', [PlatformController::class, 'users'])->name('platform.users');
     Route::patch('/platform/users/{userId}', [PlatformController::class, 'updateUser'])->name('platform.users.update');
+    Route::delete('/platform/users/{userId}', [PlatformController::class, 'deleteUser'])->name('platform.users.delete');
+    Route::delete('/platform/users', [PlatformController::class, 'bulkDeleteUsers'])->name('platform.users.bulk-delete');
     Route::get('/platform/groups', [PlatformController::class, 'groups'])->name('platform.groups');
     Route::post('/platform/groups/{groupId}/suspend', [PlatformController::class, 'suspend'])->name('platform.groups.suspend');
     Route::post('/platform/groups/{groupId}/activate', [PlatformController::class, 'activate'])->name('platform.groups.activate');
