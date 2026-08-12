@@ -22,6 +22,8 @@ class AuthTest extends TestCase
 
         $response->assertRedirect(route('dashboard.home'));
         $this->assertAuthenticated();
+
+        $this->get('/dashboard')->assertRedirect(route('landing'));
         $this->assertDatabaseHas('users', [
             'email' => 'test@example.com',
             'full_name' => 'Test User',
@@ -43,6 +45,8 @@ class AuthTest extends TestCase
 
         $response->assertRedirect(route('dashboard.home'));
         $this->assertAuthenticated();
+
+        $this->get('/dashboard')->assertRedirect(route('landing'));
     }
 
     public function test_user_cannot_login_with_invalid_credentials(): void
