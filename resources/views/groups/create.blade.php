@@ -37,21 +37,21 @@
             <div class="space-y-5">
                 <div>
                     <label for="name" class="mb-2 block text-sm font-medium text-slate-700">Community Name</label>
-                    <input id="name" name="name" value="{{ old('name') }}" required maxlength="120" autocomplete="organization" placeholder="e.g. Usahawan Malaysia" class="block w-full rounded-xl border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500">
+                    <input id="name" name="name" value="{{ old('name') }}" required maxlength="120" autocomplete="organization" placeholder="e.g. Usahawan Malaysia" class="block min-h-[52px] w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base shadow-sm focus:border-brand-500 focus:ring-brand-500">
                 </div>
 
                 <div>
                     <label for="slug" class="mb-2 block text-sm font-medium text-slate-700">Community URL</label>
-                    <div class="flex rounded-xl border border-slate-300 bg-white focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
-                        <span class="hidden items-center border-r border-slate-200 bg-slate-50 px-3 text-sm text-slate-500 sm:flex">bangsa.org/</span>
-                        <input id="slug" name="slug" value="{{ old('slug') }}" required minlength="3" maxlength="50" pattern="[a-z0-9-]+" placeholder="usahawan-malaysia" class="min-w-0 flex-1 rounded-xl border-0 text-sm focus:ring-0 sm:rounded-l-none">
+                    <div class="flex min-h-[52px] overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
+                        <span class="hidden items-center border-r border-slate-200 bg-slate-50 px-4 text-sm text-slate-500 sm:flex">bangsa.org/</span>
+                        <input id="slug" name="slug" value="{{ old('slug') }}" required minlength="3" maxlength="50" pattern="[a-z0-9-]+" placeholder="usahawan-malaysia" class="min-w-0 flex-1 rounded-xl border-0 bg-white px-4 py-3 text-base focus:ring-0 sm:rounded-l-none">
                     </div>
                     <p class="mt-2 text-xs text-slate-400">Use lowercase letters, numbers, and hyphens only.</p>
                 </div>
 
                 <div>
                     <label for="description" class="mb-2 block text-sm font-medium text-slate-700">Description</label>
-                    <textarea id="description" name="description" rows="5" maxlength="2000" placeholder="Describe who this community is for and what members can expect." class="block w-full rounded-xl border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500">{{ old('description') }}</textarea>
+                    <textarea id="description" name="description" rows="5" maxlength="2000" placeholder="Describe who this community is for and what members can expect." class="block min-h-40 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base shadow-sm focus:border-brand-500 focus:ring-brand-500">{{ old('description') }}</textarea>
                 </div>
             </div>
         </section>
@@ -99,11 +99,11 @@
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
                     <label for="logo_url" class="mb-2 block text-sm font-medium text-slate-700">Logo URL <span class="font-normal text-slate-400">(optional)</span></label>
-                    <input id="logo_url" name="logo_url" type="url" value="{{ old('logo_url') }}" placeholder="https://example.com/logo.png" class="block w-full rounded-xl border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500">
+                    <input id="logo_url" name="logo_url" type="url" value="{{ old('logo_url') }}" placeholder="https://example.com/logo.png" class="block min-h-[52px] w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base shadow-sm focus:border-brand-500 focus:ring-brand-500">
                 </div>
                 <div>
                     <label for="cover_image_url" class="mb-2 block text-sm font-medium text-slate-700">Cover Image URL <span class="font-normal text-slate-400">(optional)</span></label>
-                    <input id="cover_image_url" name="cover_image_url" type="url" value="{{ old('cover_image_url') }}" placeholder="https://example.com/cover.jpg" class="block w-full rounded-xl border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500">
+                    <input id="cover_image_url" name="cover_image_url" type="url" value="{{ old('cover_image_url') }}" placeholder="https://example.com/cover.jpg" class="block min-h-[52px] w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base shadow-sm focus:border-brand-500 focus:ring-brand-500">
                 </div>
             </div>
 
