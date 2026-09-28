@@ -18,7 +18,7 @@
         <div class="flex flex-wrap gap-3">
             @auth
                 @if($canCreateGroup)
-                    <a href="{{ route('groups.create') }}" class="rounded-lg bg-white px-5 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100">Create Your Group</a>
+                    <a href="{{ route('groups.create') }}" class="rounded-lg bg-white px-5 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100">Create Community</a>
                 @else
                     <a href="{{ route('dashboard.home') }}" class="rounded-lg bg-white px-5 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100">Go To Dashboard</a>
                 @endif
@@ -62,7 +62,7 @@
                 <p class="text-xs font-medium text-slate-500">https://bangsa.org/{{ $group->slug }}</p>
             </a>
         @empty
-            <div class="col-span-full rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">No active groups yet.</div>
+            <div class="col-span-full rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">No active communities yet.</div>
         @endforelse
     </div>
 </section>
@@ -88,11 +88,11 @@
         <h2 class="mb-3 text-xl font-semibold">Ready to build your network brand?</h2>
         <p class="mb-6 text-sm text-slate-300">Launch your community URL, onboard members with review flow, and manage growth in one dashboard.</p>
         @if(auth()->check() && $canCreateGroup)
-            <a href="{{ route('groups.create') }}" class="inline-flex rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100">Launch Bangsa Group</a>
+            <a href="{{ route('groups.create') }}" class="inline-flex rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100">Create Community</a>
         @elseif(auth()->check())
             <a href="{{ route('dashboard.home') }}" class="inline-flex rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100">Open Dashboard</a>
         @else
-            <a href="{{ route('register') }}" class="inline-flex rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100">Launch Bangsa Group</a>
+            <a href="{{ route('register') }}" class="inline-flex rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100">Create Community</a>
         @endif
     </div>
 </section>

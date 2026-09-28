@@ -16,14 +16,14 @@ class GroupController extends Controller
 {
     public function create()
     {
-        abort_unless($this->canCreateGroup(auth()->user()), 403, 'Only admin/owner can create groups.');
+        abort_unless($this->canCreateGroup(auth()->user()), 403, 'Only admins and organisers can create communities.');
 
         return view('groups.create');
     }
 
     public function store(Request $request): RedirectResponse
     {
-        abort_unless($this->canCreateGroup($request->user()), 403, 'Only admin/owner can create groups.');
+        abort_unless($this->canCreateGroup($request->user()), 403, 'Only admins and organisers can create communities.');
 
         $validated = $request->validate([
             'slug' => ['required', 'regex:/^[a-z0-9-]{3,50}$/', 'unique:groups,slug'],

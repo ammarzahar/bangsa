@@ -13,8 +13,6 @@
         (auth()->user()->isOrganiser() && \App\Models\Group::query()->where('owner_id', auth()->id())->count() < 1)
     );
 
-    $canManageBilling = auth()->check() && auth()->user()->isOrganiser();
-
     $showSidebar = auth()->check() && (
         request()->routeIs('dashboard.*') ||
         request()->routeIs('communities.*') ||
@@ -41,10 +39,7 @@
             <div class="hidden items-center gap-2 md:flex">
                 @auth
                     @if($canCreateGroup)
-                        <a href="{{ route('groups.create') }}" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Create Group</a>
-                    @endif
-                    @if($canManageBilling)
-                        <a href="{{ route('billing.plans') }}" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Plans</a>
+                        <a href="{{ route('groups.create') }}" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Create Community</a>
                     @endif
                 @endauth
             </div>
@@ -65,7 +60,7 @@
         <div class="flex items-center gap-3">
             @auth
                 @if($showSidebar && $canCreateGroup)
-                    <a href="{{ route('groups.create') }}" class="hidden rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 md:inline-flex">Create Group</a>
+                    <a href="{{ route('groups.create') }}" class="hidden rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 md:inline-flex">Create Community</a>
                 @endif
                 <x-nav.user-dropdown />
             @else

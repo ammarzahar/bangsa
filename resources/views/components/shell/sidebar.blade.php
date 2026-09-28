@@ -4,8 +4,6 @@
         (auth()->user()->isOrganiser() && \App\Models\Group::query()->where('owner_id', auth()->id())->count() < 1)
     );
 
-    $canManageBilling = auth()->check() && auth()->user()->isOrganiser();
-
     $navItem = function (string $route, string $label, string $activePattern, string $iconPath) {
         $active = request()->routeIs($activePattern);
         return '<a href="'.e(route($route)).'" class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition '.($active ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900').'"><svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">'.$iconPath.'</svg><span>'.e($label).'</span></a>';
@@ -25,17 +23,9 @@
                 <li>{!! $navItem('dashboard.home', 'Dashboard', 'dashboard.home', '<path stroke-linecap="round" stroke-linejoin="round" d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v4H4zM14 15h6v4h-6z"/>') !!}</li>
                 <li>{!! $navItem('communities.index', 'Browse Communities', 'communities.*', '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>') !!}</li>
                 @if($canCreateGroup)
-                    <li>{!! $navItem('groups.create', 'Create Group', 'groups.create', '<path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>') !!}</li>
+                    <li>{!! $navItem('groups.create', 'Create Community', 'groups.create', '<path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>') !!}</li>
                 @endif
             </ul>
-
-            @if($canManageBilling)
-                <p class="mb-2 mt-6 px-3 text-xs font-semibold uppercase text-slate-400">Billing</p>
-                <ul class="space-y-1">
-                    <li>{!! $navItem('billing.plans', 'Plans', 'billing.plans', '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M6 7v12h12V7M8 11h8M8 15h5"/>') !!}</li>
-                    <li>{!! $navItem('billing.subscriptions', 'Subscriptions', 'billing.subscriptions', '<path stroke-linecap="round" stroke-linejoin="round" d="M7 7h10v10H7zM4 4h16v16H4z"/>') !!}</li>
-                </ul>
-            @endif
 
             @if(auth()->user()?->isAdmin())
                 <p class="mb-2 mt-6 px-3 text-xs font-semibold uppercase text-slate-400">Admin</p>

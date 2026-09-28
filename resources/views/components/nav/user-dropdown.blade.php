@@ -22,10 +22,11 @@
     <ul class="py-2 text-sm text-slate-700">
         <li><a href="{{ route('profile.edit') }}" class="block px-4 py-2 hover:bg-slate-100">Profile</a></li>
         @if($canManageBilling)
-            <li><a href="{{ route('billing.subscriptions') }}" class="block px-4 py-2 hover:bg-slate-100">My Subscriptions</a></li>
+            <li><a href="{{ route('billing.plans') }}" class="block px-4 py-2 hover:bg-slate-100">Plans</a></li>
+            <li><a href="{{ route('billing.subscriptions') }}" class="block px-4 py-2 hover:bg-slate-100">Billing</a></li>
         @endif
         @if($canCreateGroup)
-            <li><a href="{{ route('groups.create') }}" class="block px-4 py-2 hover:bg-slate-100">Create Group</a></li>
+            <li><a href="{{ route('groups.create') }}" class="block px-4 py-2 hover:bg-slate-100">Create Community</a></li>
         @endif
         @if($user->isAdmin())
             <li><a href="{{ route('dashboard.platform') }}" class="block px-4 py-2 hover:bg-slate-100">Platform Dashboard</a></li>
