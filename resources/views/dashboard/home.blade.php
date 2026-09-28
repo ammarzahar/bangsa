@@ -7,7 +7,7 @@
         <p class="mt-1 text-sm text-slate-500">Manage your Bangsa account and discover communities.</p>
     </div>
     <div class="flex flex-wrap gap-2">
-        <a href="{{ route('landing') }}" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">Browse Communities</a>
+        <a href="{{ route('communities.index') }}" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">Browse Communities</a>
         @if(auth()->user()->isOrganiser())
             <a href="{{ route('billing.plans') }}" class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">Upgrade Plan</a>
         @endif
@@ -59,7 +59,7 @@
                 <span class="rounded-xl bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">Priority</span>
             </div>
             <div class="space-y-3">
-                <a href="{{ route('landing') }}" class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 hover:border-brand-200 hover:bg-brand-50">
+                <a href="{{ route('communities.index') }}" class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 hover:border-brand-200 hover:bg-brand-50">
                     <div>
                         <p class="font-medium text-slate-950">Find a community</p>
                         <p class="mt-1 text-sm text-slate-500">Open a public group and submit a join request.</p>

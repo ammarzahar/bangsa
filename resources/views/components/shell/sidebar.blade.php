@@ -23,8 +23,7 @@
             <p class="mb-2 px-3 text-xs font-semibold uppercase text-slate-400">Menu</p>
             <ul class="space-y-1">
                 <li>{!! $navItem('dashboard.home', 'Dashboard', 'dashboard.home', '<path stroke-linecap="round" stroke-linejoin="round" d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v4H4zM14 15h6v4h-6z"/>') !!}</li>
-                <li>{!! $navItem('profile.edit', 'Profile', 'profile.*', '<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 20a8 8 0 0 1 16 0"/>') !!}</li>
-                <li>{!! $navItem('landing', 'Browse Communities', 'landing', '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>') !!}</li>
+                <li>{!! $navItem('communities.index', 'Browse Communities', 'communities.*', '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>') !!}</li>
                 @if($canCreateGroup)
                     <li>{!! $navItem('groups.create', 'Create Group', 'groups.create', '<path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>') !!}</li>
                 @endif

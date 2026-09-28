@@ -17,6 +17,7 @@
 
     $showSidebar = auth()->check() && (
         request()->routeIs('dashboard.*') ||
+        request()->routeIs('communities.*') ||
         request()->routeIs('platform.*') ||
         request()->routeIs('groups.settings*') ||
         request()->routeIs('groups.membership.*') ||

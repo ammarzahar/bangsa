@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MemberProfileController;
@@ -15,6 +16,7 @@ require __DIR__.'/auth.php';
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'home'])->name('dashboard.home');
+    Route::get('/communities', [CommunityController::class, 'index'])->name('communities.index');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
