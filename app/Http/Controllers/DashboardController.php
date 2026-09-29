@@ -30,7 +30,7 @@ class DashboardController extends Controller
 
         $groups = Group::query()
             ->where('status', Group::STATUS_ACTIVE)
-            ->where('visibility', Group::VISIBILITY_PUBLIC)
+            ->whereIn('visibility', [Group::VISIBILITY_PUBLIC, Group::VISIBILITY_PAID])
             ->orderByDesc('created_at')
             ->take(6)
             ->get();
@@ -88,7 +88,7 @@ class DashboardController extends Controller
             ->where('user_id', $request->user()->id)
             ->first();
 
-        if (!$isManager && !$viewerMembership) {
+        if (! $isManager && ! $viewerMembership) {
             abort(403);
         }
 

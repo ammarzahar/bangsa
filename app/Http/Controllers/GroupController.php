@@ -7,10 +7,13 @@ use App\Models\Group;
 use App\Models\GroupMembership;
 use App\Models\MemberProfile;
 use App\Models\Subscription;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class GroupController extends Controller
 {
@@ -29,10 +32,15 @@ class GroupController extends Controller
             'slug' => ['required', 'regex:/^[a-z0-9-]{3,50}$/', 'unique:groups,slug'],
             'name' => ['required', 'string', 'min:2', 'max:120'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'visibility' => ['required', 'in:PUBLIC,PRIVATE'],
-            'logo_url' => ['nullable', 'url'],
-            'cover_image_url' => ['nullable', 'url'],
+            'visibility' => ['required', 'in:PUBLIC,PRIVATE,PAID'],
+            'taut_checkout_url' => ['nullable', 'required_if:visibility,PAID', 'url:http,https', 'max:2048'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:min_width=256,min_height=256,max_width=2000,max_height=2000'],
+            'cover_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:min_width=1200,min_height=400,max_width=4000,max_height=2000'],
         ]);
+
+        $this->validateTautCheckoutUrl(
+            $validated['visibility'] === Group::VISIBILITY_PAID ? $validated['taut_checkout_url'] : null
+        );
 
         $subscription = Subscription::query()
             ->where('owner_user_id', $request->user()->id)
@@ -41,7 +49,7 @@ class GroupController extends Controller
             ->orderBy('created_at')
             ->first();
 
-        if ($request->user()->account_type === \App\Models\User::TYPE_ORGANISER_PLUS && (!$subscription || !$subscription->isActiveWindow())) {
+        if ($request->user()->account_type === User::TYPE_ORGANISER_PLUS && (! $subscription || ! $subscription->isActiveWindow())) {
             return back()->withErrors(['subscription' => 'An active subscription is required for Organiser Plus features.']);
         }
 
@@ -51,12 +59,28 @@ class GroupController extends Controller
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'visibility' => $validated['visibility'],
-                'logo_url' => $validated['logo_url'] ?? null,
-                'cover_image_url' => $validated['cover_image_url'] ?? null,
+                'taut_checkout_url' => $validated['visibility'] === Group::VISIBILITY_PAID
+                    ? $validated['taut_checkout_url']
+                    : null,
                 'status' => Group::STATUS_ACTIVE,
                 'owner_id' => $request->user()->id,
                 'invite_token' => Str::random(40),
             ]);
+
+            $branding = [];
+            if ($request->hasFile('logo')) {
+                $branding['logo_url'] = Storage::disk('public')->url(
+                    $request->file('logo')->store("communities/{$group->id}", 'public')
+                );
+            }
+            if ($request->hasFile('cover_image')) {
+                $branding['cover_image_url'] = Storage::disk('public')->url(
+                    $request->file('cover_image')->store("communities/{$group->id}", 'public')
+                );
+            }
+            if ($branding !== []) {
+                $group->update($branding);
+            }
 
             $subscription?->update(['group_id' => $group->id]);
 
@@ -93,7 +117,7 @@ class GroupController extends Controller
     public function show(Request $request, string $group_slug)
     {
         $group = $request->attributes->get('current_group');
-        if (!$this->hasInviteAccess($request, $group)) {
+        if (! $this->hasInviteAccess($request, $group)) {
             $this->authorize('view', $group);
         }
 
@@ -130,7 +154,7 @@ class GroupController extends Controller
         $request->session()->put("group_invites.{$group->id}", $invite_token);
         $request->session()->put('url.intended', route('groups.show', [$group->slug]));
 
-        if (!$request->user()) {
+        if (! $request->user()) {
             return redirect()->route('login')->with('status', 'Sign in or create an account to join this private community.');
         }
 
@@ -156,12 +180,41 @@ class GroupController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:120'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'visibility' => ['required', 'in:PUBLIC,PRIVATE'],
-            'logo_url' => ['nullable', 'url'],
-            'cover_image_url' => ['nullable', 'url'],
+            'visibility' => ['required', 'in:PUBLIC,PRIVATE,PAID'],
+            'taut_checkout_url' => ['nullable', 'required_if:visibility,PAID', 'url:http,https', 'max:2048'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:min_width=256,min_height=256,max_width=2000,max_height=2000'],
+            'cover_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:min_width=1200,min_height=400,max_width=4000,max_height=2000'],
         ]);
 
+        $this->validateTautCheckoutUrl(
+            $validated['visibility'] === Group::VISIBILITY_PAID ? $validated['taut_checkout_url'] : null
+        );
+
+        $validated['taut_checkout_url'] = $validated['visibility'] === Group::VISIBILITY_PAID
+            ? $validated['taut_checkout_url']
+            : null;
+
+        unset($validated['logo'], $validated['cover_image']);
+
+        $oldBranding = [];
+        if ($request->hasFile('logo')) {
+            $oldBranding[] = $this->publicStoragePath($group->logo_url);
+            $validated['logo_url'] = Storage::disk('public')->url(
+                $request->file('logo')->store("communities/{$group->id}", 'public')
+            );
+        }
+        if ($request->hasFile('cover_image')) {
+            $oldBranding[] = $this->publicStoragePath($group->cover_image_url);
+            $validated['cover_image_url'] = Storage::disk('public')->url(
+                $request->file('cover_image')->store("communities/{$group->id}", 'public')
+            );
+        }
+
         $group->update($validated);
+
+        foreach (array_filter($oldBranding) as $oldPath) {
+            Storage::disk('public')->delete($oldPath);
+        }
 
         AuditLog::query()->create([
             'target_group_id' => $group->id,
@@ -193,9 +246,9 @@ class GroupController extends Controller
         return $candidate;
     }
 
-    private function canCreateGroup(?\App\Models\User $user): bool
+    private function canCreateGroup(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -203,13 +256,45 @@ class GroupController extends Controller
             return true;
         }
 
-        if (!$user->isOrganiser()) {
+        if (! $user->isOrganiser()) {
             return false;
         }
 
         return Group::query()
             ->where('owner_id', $user->id)
             ->count() < 1;
+    }
+
+    private function validateTautCheckoutUrl(?string $url): void
+    {
+        if (! $url) {
+            return;
+        }
+
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        if (
+            ($host !== 'taut.my' && ! str_ends_with($host, '.taut.my'))
+            || preg_match('~/checkout/(\d+)/?$~', $path) !== 1
+        ) {
+            throw ValidationException::withMessages([
+                'taut_checkout_url' => 'Use a TAUT single-product checkout URL ending with /checkout/{product_id}.',
+            ]);
+        }
+    }
+
+    private function publicStoragePath(?string $url): ?string
+    {
+        if (! $url) {
+            return null;
+        }
+
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        if (! str_starts_with($path, '/storage/')) {
+            return null;
+        }
+
+        return ltrim(Str::after($path, '/storage/'), '/');
     }
 
     private function hasInviteAccess(Request $request, Group $group): bool

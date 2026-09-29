@@ -46,7 +46,7 @@
                             <p class="truncate text-xs font-medium text-slate-400">bangsa.org/{{ $group->slug }}</p>
                         </div>
                     </div>
-                    <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Public</span>
+                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $group->visibility === \App\Models\Group::VISIBILITY_PAID ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700' }}">{{ str($group->visibility)->headline() }}</span>
                 </div>
 
                 <p class="mb-5 line-clamp-3 flex-1 text-sm leading-6 text-slate-600">{{ $group->description ?: 'This community has not added a description yet.' }}</p>

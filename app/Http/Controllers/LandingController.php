@@ -10,7 +10,7 @@ class LandingController extends Controller
     {
         $groups = Group::query()
             ->where('status', Group::STATUS_ACTIVE)
-            ->when(!auth()->user()?->isAdmin(), fn ($query) => $query->where('visibility', Group::VISIBILITY_PUBLIC))
+            ->when(! auth()->user()?->isAdmin(), fn ($query) => $query->whereIn('visibility', [Group::VISIBILITY_PUBLIC, Group::VISIBILITY_PAID]))
             ->orderBy('created_at', 'desc')
             ->take(12)
             ->get();

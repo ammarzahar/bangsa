@@ -31,4 +31,8 @@ return [
         ],
     ],
 
+    'taut' => [
+        'webhook_secret' => env('TAUT_BANGSA_WEBHOOK_SECRET'),
+    ],
+
 ];

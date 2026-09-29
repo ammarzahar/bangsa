@@ -15,14 +15,21 @@ class Group extends Model
     use HasUuids;
 
     public const VISIBILITY_PUBLIC = 'PUBLIC';
+
     public const VISIBILITY_PRIVATE = 'PRIVATE';
 
+    public const VISIBILITY_PAID = 'PAID';
+
     public const STATUS_ACTIVE = 'ACTIVE';
+
     public const STATUS_PENDING_PAYMENT = 'PENDING_PAYMENT';
+
     public const STATUS_SUSPENDED = 'SUSPENDED';
+
     public const STATUS_INACTIVE = 'INACTIVE';
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -32,6 +39,7 @@ class Group extends Model
         'logo_url',
         'cover_image_url',
         'visibility',
+        'taut_checkout_url',
         'status',
         'owner_id',
         'invite_token',

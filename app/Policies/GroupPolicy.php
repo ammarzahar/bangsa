@@ -10,11 +10,11 @@ class GroupPolicy
 {
     public function view(?User $user, Group $group): bool
     {
-        if ($group->visibility === Group::VISIBILITY_PUBLIC) {
+        if (in_array($group->visibility, [Group::VISIBILITY_PUBLIC, Group::VISIBILITY_PAID], true)) {
             return true;
         }
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -53,7 +53,7 @@ class GroupPolicy
             return true;
         }
 
-        return !GroupMembership::query()
+        return ! GroupMembership::query()
             ->where('group_id', $group->id)
             ->where('user_id', $user->id)
             ->where('status', GroupMembership::STATUS_APPROVED)

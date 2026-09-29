@@ -1,19 +1,28 @@
 ﻿@extends('layouts.app')
 
 @section('content')
-<div class="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+<div class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    @if($group->cover_image_url)
+        <img src="{{ $group->cover_image_url }}" alt="{{ $group->name }} cover" class="h-44 w-full object-cover sm:h-56">
+    @endif
+    <div class="p-6 lg:p-8">
     <div class="flex flex-wrap items-start justify-between gap-4">
-        <div>
+        <div class="flex min-w-0 items-start gap-4">
+            @if($group->logo_url)
+                <img src="{{ $group->logo_url }}" alt="{{ $group->name }} logo" class="h-16 w-16 shrink-0 rounded-2xl border-4 border-white object-cover shadow-sm">
+            @endif
+            <div>
             <h1 class="text-3xl font-semibold text-slate-900">{{ $group->name }}</h1>
             <p class="mt-1 text-sm text-slate-600">https://bangsa.org/{{ $group->slug }} · {{ $group->visibility }} · {{ $group->status }}</p>
             <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-600">{{ $group->description ?: 'No description provided yet.' }}</p>
+            </div>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('groups.members.directory', [$group->slug]) }}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Directory</a>
             @auth
                 <form method="POST" action="{{ route('groups.join', [$group->slug]) }}">
                     @csrf
-                    <button type="submit" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">Request Join</button>
+                    <button type="submit" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">{{ $group->visibility === \App\Models\Group::VISIBILITY_PAID ? 'Purchase Membership' : 'Request Join' }}</button>
                 </form>
                 <a href="{{ route('dashboard.group', [$group->slug]) }}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Group Dashboard</a>
                 @can('manage', $group)
@@ -21,6 +30,7 @@
                 @endcan
             @endauth
         </div>
+    </div>
     </div>
 </div>
 

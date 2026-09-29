@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MemberProfileController;
@@ -9,9 +9,15 @@ use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\TautWebhookController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', LandingController::class)->name('landing');
+Route::post('/integrations/taut/webhook', TautWebhookController::class)
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->middleware('throttle:60,1')
+    ->name('integrations.taut.webhook');
 require __DIR__.'/auth.php';
 
 Route::middleware(['auth'])->group(function () {

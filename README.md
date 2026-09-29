@@ -1,11 +1,11 @@
-# Bangsa Laravel 11 Rewrite
+# Bangsa Laravel Application
 
-Laravel 11 + Blade (Breeze-style auth) rewrite of the Bangsa MVP backend.
+Laravel 12 + Blade application for the Bangsa community platform.
 
 ## Stack
 
 - PHP 8.2+
-- Laravel 11
+- Laravel 12
 - Blade views
 - Single database tenancy (`group_id` isolation)
 - Eloquent models + policies + middleware
@@ -15,6 +15,8 @@ Laravel 11 + Blade (Breeze-style auth) rewrite of the Bangsa MVP backend.
 - Auth: register/login/logout/password reset/email verification
 - Group lifecycle: paid group creation, settings, visibility
 - Membership workflow: join request, admin approve/reject
+- Paid communities: TAUT checkout handoff and signed payment webhook activation
+- Community branding uploads with image size and dimension validation
 - Member profiles: rich fields + SEO URL per group
 - Directory: searchable/filterable per group
 - Dashboards:
@@ -53,10 +55,17 @@ php artisan key:generate
 
 3. Configure database in `.env` (`DB_*` values).
 
+For paid communities, configure the same random secret in both Bangsa and TAUT:
+
+```env
+TAUT_BANGSA_WEBHOOK_SECRET=replace-with-a-long-random-secret
+```
+
 4. Run migrations + seeders:
 
 ```bash
 php artisan migrate:fresh --seed
+php artisan storage:link
 ```
 
 5. Start app:
@@ -72,7 +81,15 @@ php artisan serve
 
 ## Important Runtime Note
 
-This project targets **Laravel 11 / PHP 8.2+**. If your local PHP is below 8.2, Artisan commands may fail. Upgrade PHP first.
+This project targets **Laravel 12 / PHP 8.2+**. If your local PHP is below 8.2, Artisan commands may fail. Upgrade PHP first.
+
+## Paid Community Flow
+
+1. The organiser creates a membership product in TAUT and pastes its checkout URL into Bangsa.
+2. Bangsa signs the member and community context before redirecting to TAUT checkout.
+3. TAUT stores that context with the order and remains the source of truth for payments and order management.
+4. When TAUT marks the order paid, it sends a signed webhook to `/integrations/taut/webhook`.
+5. Bangsa verifies the signature and activates the membership idempotently.
 
 ## Key Files
 

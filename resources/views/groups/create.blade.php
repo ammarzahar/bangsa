@@ -10,7 +10,7 @@
 
     <div class="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <ol class="grid grid-cols-3 gap-2" aria-label="Community creation progress">
-            @foreach([1 => ['Basics', 'Name and purpose'], 2 => ['Access', 'Public or private'], 3 => ['Review', 'Brand and confirm']] as $number => [$label, $description])
+            @foreach([1 => ['Basics', 'Name and purpose'], 2 => ['Access', 'Free, private or paid'], 3 => ['Review', 'Brand and confirm']] as $number => [$label, $description])
                 <li>
                     <button type="button" data-wizard-step-button="{{ $number }}" class="flex w-full items-center gap-3 rounded-xl p-2 text-left transition sm:p-3" aria-current="{{ $number === 1 ? 'step' : 'false' }}">
                         <span data-wizard-step-circle class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold">{{ $number }}</span>
@@ -24,7 +24,7 @@
         </ol>
     </div>
 
-    <form method="POST" action="{{ route('groups.store') }}" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" data-community-form>
+    <form method="POST" action="{{ route('groups.store') }}" enctype="multipart/form-data" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" data-community-form>
         @csrf
 
         <section data-wizard-panel="1" class="p-6 sm:p-8">
@@ -63,7 +63,7 @@
                 <p class="mt-1 text-sm text-slate-500">Control who can discover and view your community.</p>
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
+            <div class="grid gap-4 lg:grid-cols-3">
                 <label class="cursor-pointer rounded-2xl border border-slate-200 p-5 transition has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 has-[:checked]:ring-1 has-[:checked]:ring-brand-500">
                     <span class="flex items-start gap-3">
                         <input type="radio" name="visibility" value="PUBLIC" required class="mt-1 border-slate-300 text-brand-600 focus:ring-brand-500" @checked(old('visibility', 'PUBLIC') === 'PUBLIC')>
@@ -82,10 +82,25 @@
                         </span>
                     </span>
                 </label>
+                <label class="cursor-pointer rounded-2xl border border-slate-200 p-5 transition has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 has-[:checked]:ring-1 has-[:checked]:ring-brand-500">
+                    <span class="flex items-start gap-3">
+                        <input type="radio" name="visibility" value="PAID" required class="mt-1 border-slate-300 text-brand-600 focus:ring-brand-500" @checked(old('visibility') === 'PAID')>
+                        <span>
+                            <span class="block font-semibold text-slate-950">Paid community</span>
+                            <span class="mt-1 block text-sm leading-6 text-slate-500">Members purchase access through TAUT before approval.</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+
+            <div data-paid-checkout-fields class="mt-6 {{ old('visibility') === 'PAID' ? '' : 'hidden' }}">
+                <label for="taut_checkout_url" class="mb-2 block text-sm font-medium text-slate-700">TAUT Checkout URL</label>
+                <input id="taut_checkout_url" name="taut_checkout_url" type="url" value="{{ old('taut_checkout_url') }}" placeholder="https://your-store.taut.my/checkout/123" class="block min-h-[52px] w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                <p class="mt-2 text-xs text-slate-400">Create the membership product in TAUT, then paste its checkout URL here.</p>
             </div>
 
             <div class="mt-6 rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-sm leading-6 text-cyan-900">
-                All join requests still require admin approval, regardless of visibility.
+                Free communities use admin approval. Paid communities are activated automatically after TAUT confirms payment.
             </div>
         </section>
 
@@ -98,24 +113,42 @@
 
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
-                    <label for="logo_url" class="mb-2 block text-sm font-medium text-slate-700">Logo URL <span class="font-normal text-slate-400">(optional)</span></label>
-                    <input id="logo_url" name="logo_url" type="url" value="{{ old('logo_url') }}" placeholder="https://example.com/logo.png" class="block min-h-[52px] w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                    <label for="logo" class="mb-2 block text-sm font-medium text-slate-700">Community Logo <span class="font-normal text-slate-400">(optional)</span></label>
+                    <label for="logo" class="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-center transition hover:border-brand-400 hover:bg-brand-50">
+                        <svg class="mb-2 h-7 w-7 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16.5V19h16v-2.5M12 4v11m-4-7 4-4 4 4"/></svg>
+                        <span class="text-sm font-semibold text-slate-700">Upload logo</span>
+                        <span class="mt-1 text-xs text-slate-400">JPG, PNG or WebP · max 2MB</span>
+                        <span class="mt-1 text-xs text-slate-400">Minimum 256×256px, square recommended</span>
+                    </label>
+                    <input id="logo" name="logo" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" data-image-input data-preview-target="logo-preview">
                 </div>
                 <div>
-                    <label for="cover_image_url" class="mb-2 block text-sm font-medium text-slate-700">Cover Image URL <span class="font-normal text-slate-400">(optional)</span></label>
-                    <input id="cover_image_url" name="cover_image_url" type="url" value="{{ old('cover_image_url') }}" placeholder="https://example.com/cover.jpg" class="block min-h-[52px] w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                    <label for="cover_image" class="mb-2 block text-sm font-medium text-slate-700">Cover Image <span class="font-normal text-slate-400">(optional)</span></label>
+                    <label for="cover_image" class="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-center transition hover:border-brand-400 hover:bg-brand-50">
+                        <svg class="mb-2 h-7 w-7 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16.5V19h16v-2.5M12 4v11m-4-7 4-4 4 4"/></svg>
+                        <span class="text-sm font-semibold text-slate-700">Upload cover image</span>
+                        <span class="mt-1 text-xs text-slate-400">JPG, PNG or WebP · max 5MB</span>
+                        <span class="mt-1 text-xs text-slate-400">Minimum 1200×400px</span>
+                    </label>
+                    <input id="cover_image" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" data-image-input data-preview-target="cover-preview">
                 </div>
             </div>
 
-            <div class="mt-7 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <div class="relative mt-7 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                <img id="cover-preview" alt="Cover preview" class="hidden h-32 w-full object-cover">
+                <div class="p-5">
                 <p class="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Community Preview</p>
                 <div class="flex items-start gap-4">
-                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-lg font-bold text-white" data-review-initial>C</span>
+                    <span class="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-600 text-lg font-bold text-white">
+                        <span data-review-initial>C</span>
+                        <img id="logo-preview" alt="Logo preview" class="absolute inset-0 hidden h-full w-full object-cover">
+                    </span>
                     <div class="min-w-0">
                         <h3 class="truncate text-lg font-semibold text-slate-950" data-review-name>Your community</h3>
                         <p class="truncate text-sm font-medium text-brand-600">bangsa.org/<span data-review-slug>community-url</span></p>
                         <p class="mt-2 text-sm text-slate-500"><span data-review-visibility>Public</span> community</p>
                     </div>
+                </div>
                 </div>
             </div>
         </section>

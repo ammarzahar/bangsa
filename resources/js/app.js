@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const backButton = wizard.querySelector('[data-wizard-back]');
     const nextButton = wizard.querySelector('[data-wizard-next]');
     const submitButton = wizard.querySelector('[data-wizard-submit]');
+    const paidCheckoutFields = wizard.querySelector('[data-paid-checkout-fields]');
+    const paidCheckoutInput = form.elements.taut_checkout_url;
     let currentStep = 1;
     let furthestStep = 1;
 
@@ -26,6 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
         wizard.querySelector('[data-review-slug]').textContent = slug;
         wizard.querySelector('[data-review-initial]').textContent = name.charAt(0).toUpperCase();
         wizard.querySelector('[data-review-visibility]').textContent = visibility.charAt(0) + visibility.slice(1).toLowerCase();
+    };
+
+    const updatePaidFields = () => {
+        const isPaid = form.elements.visibility.value === 'PAID';
+        paidCheckoutFields?.classList.toggle('hidden', !isPaid);
+        if (paidCheckoutInput) {
+            paidCheckoutInput.required = isPaid;
+        }
     };
 
     const showStep = (step) => {
@@ -89,7 +99,28 @@ document.addEventListener('DOMContentLoaded', () => {
         event.target.value = event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
         updateReview();
     });
-    [...form.elements.visibility].forEach((field) => field.addEventListener('change', updateReview));
+    [...form.elements.visibility].forEach((field) => field.addEventListener('change', () => {
+        updateReview();
+        updatePaidFields();
+    }));
 
+    wizard.querySelectorAll('[data-image-input]').forEach((input) => {
+        input.addEventListener('change', () => {
+            const file = input.files?.[0];
+            const preview = document.getElementById(input.dataset.previewTarget);
+
+            if (!file || !preview) {
+                return;
+            }
+
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+            if (input.name === 'logo') {
+                wizard.querySelector('[data-review-initial]')?.classList.add('invisible');
+            }
+        });
+    });
+
+    updatePaidFields();
     showStep(1);
 });

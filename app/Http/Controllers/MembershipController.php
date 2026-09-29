@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\Group;
 use App\Models\GroupMembership;
 use App\Models\MemberProfile;
 use App\Models\MembershipRequest;
+use App\Services\TautCheckoutUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +15,7 @@ use Illuminate\Support\Str;
 
 class MembershipController extends Controller
 {
-    public function join(Request $request, string $group_slug): RedirectResponse
+    public function join(Request $request, string $group_slug, TautCheckoutUrl $checkoutUrl): RedirectResponse
     {
         $group = $request->attributes->get('current_group');
 
@@ -24,6 +26,36 @@ class MembershipController extends Controller
 
         if ($existingMembership?->status === GroupMembership::STATUS_APPROVED) {
             return back()->with('status', 'You are already an approved member of this group.');
+        }
+
+        if ($group->visibility === Group::VISIBILITY_PAID) {
+            abort_unless($this->canJoin($request, $group), 403);
+
+            DB::transaction(function () use ($request, $group): void {
+                GroupMembership::query()->updateOrCreate(
+                    ['group_id' => $group->id, 'user_id' => $request->user()->id],
+                    [
+                        'role' => GroupMembership::ROLE_MEMBER,
+                        'status' => GroupMembership::STATUS_PENDING,
+                        'approved_by_user_id' => null,
+                        'approved_at' => null,
+                    ]
+                );
+
+                MembershipRequest::query()->updateOrCreate(
+                    ['group_id' => $group->id, 'user_id' => $request->user()->id],
+                    [
+                        'status' => MembershipRequest::STATUS_PENDING,
+                        'payment_status' => MembershipRequest::PAYMENT_AWAITING,
+                        'external_order_id' => null,
+                        'paid_at' => null,
+                        'reviewed_by_user_id' => null,
+                        'reviewed_at' => null,
+                    ]
+                );
+            });
+
+            return redirect()->away($checkoutUrl->for($group, $request->user()));
         }
 
         if ($existingMembership?->status === GroupMembership::STATUS_PENDING) {
@@ -73,9 +105,9 @@ class MembershipController extends Controller
         return back()->with('status', 'Membership request submitted.');
     }
 
-    private function canJoin(Request $request, \App\Models\Group $group): bool
+    private function canJoin(Request $request, Group $group): bool
     {
-        if ($group->status !== \App\Models\Group::STATUS_ACTIVE) {
+        if ($group->status !== Group::STATUS_ACTIVE) {
             return false;
         }
 
@@ -83,7 +115,7 @@ class MembershipController extends Controller
             return true;
         }
 
-        if ($group->visibility === \App\Models\Group::VISIBILITY_PUBLIC) {
+        if (in_array($group->visibility, [Group::VISIBILITY_PUBLIC, Group::VISIBILITY_PAID], true)) {
             return true;
         }
 
@@ -120,6 +152,13 @@ class MembershipController extends Controller
 
         if ($membershipRequest->status !== MembershipRequest::STATUS_PENDING) {
             return back()->withErrors(['request' => 'Membership request is already processed.']);
+        }
+
+        if (
+            $group->visibility === Group::VISIBILITY_PAID
+            && $membershipRequest->payment_status !== MembershipRequest::PAYMENT_PAID
+        ) {
+            return back()->withErrors(['request' => 'Payment must be confirmed by TAUT before approval.']);
         }
 
         DB::transaction(function () use ($request, $group, $membershipRequest): void {

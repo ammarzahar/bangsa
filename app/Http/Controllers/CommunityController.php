@@ -19,7 +19,7 @@ class CommunityController extends Controller
 
         $groups = Group::query()
             ->where('status', Group::STATUS_ACTIVE)
-            ->where('visibility', Group::VISIBILITY_PUBLIC)
+            ->whereIn('visibility', [Group::VISIBILITY_PUBLIC, Group::VISIBILITY_PAID])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('name', 'like', "%{$search}%")
