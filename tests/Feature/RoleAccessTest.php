@@ -106,6 +106,42 @@ class RoleAccessTest extends TestCase
         ]);
     }
 
+    public function test_group_owner_can_review_membership_requests(): void
+    {
+        $owner = $this->user('owner@example.com', User::TYPE_ORGANISER);
+        $group = $this->group($owner, ['slug' => 'owner-community']);
+        $applicant = $this->user('applicant@example.com', User::TYPE_USER);
+        MembershipRequest::query()->create([
+            'group_id' => $group->id,
+            'user_id' => $applicant->id,
+            'status' => MembershipRequest::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('groups.membership.requests', [$group->slug]))
+            ->assertOk()
+            ->assertSee($applicant->full_name);
+    }
+
+    public function test_regular_member_cannot_review_membership_requests(): void
+    {
+        $owner = $this->user('owner@example.com', User::TYPE_ORGANISER);
+        $group = $this->group($owner, ['slug' => 'protected-community']);
+        $member = $this->user('member@example.com', User::TYPE_USER);
+        GroupMembership::query()->create([
+            'group_id' => $group->id,
+            'user_id' => $member->id,
+            'role' => GroupMembership::ROLE_MEMBER,
+            'status' => GroupMembership::STATUS_APPROVED,
+            'approved_by_user_id' => $owner->id,
+            'approved_at' => now(),
+        ]);
+
+        $this->actingAs($member)
+            ->get(route('groups.membership.requests', [$group->slug]))
+            ->assertForbidden();
+    }
+
     public function test_admin_can_update_user_account_type(): void
     {
         $admin = $this->user('admin@example.com', User::TYPE_ADMIN, true);

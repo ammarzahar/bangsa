@@ -9,7 +9,7 @@ use App\Models\User;
 
 class GroupMembershipPolicy
 {
-    public function moderate(User $user, string $modelClass, Group $group): bool
+    public function moderate(User $user, Group $group): bool
     {
         if ($user->isAdmin()) {
             return true;
@@ -23,16 +23,16 @@ class GroupMembershipPolicy
             ->exists();
     }
 
-    public function updateProfile(User $user, string $modelClass, Group $group, string $targetUserId): bool
+    public function updateProfile(User $user, Group $group, string $targetUserId): bool
     {
         if ($user->isAdmin() || $user->id === $targetUserId) {
             return true;
         }
 
-        return $this->moderate($user, $modelClass, $group);
+        return $this->moderate($user, $group);
     }
 
-    public function review(User $user, string $modelClass, Group $group, MembershipRequest $request): bool
+    public function review(User $user, Group $group, MembershipRequest $request): bool
     {
         if ($request->group_id !== $group->id) {
             return false;
