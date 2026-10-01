@@ -100,6 +100,7 @@ class GroupController extends Controller
                     $group->id,
                     $request->user()->full_name ?: Str::before($request->user()->email, '@')
                 ),
+                'photo_url' => $request->user()->avatar_url,
                 'full_name' => $request->user()->full_name ?: $request->user()->email,
             ]);
 

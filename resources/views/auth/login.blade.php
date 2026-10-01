@@ -6,6 +6,9 @@
         <h1 class="mb-1 text-2xl font-semibold text-slate-900">Welcome back</h1>
         <p class="mb-6 text-sm text-slate-600">Sign in to manage your Bangsa communities.</p>
 
+        <x-auth.google-button label="Continue with Google" />
+        <x-auth.divider />
+
         <form method="POST" action="{{ route('login') }}" class="space-y-4">
             @csrf
             <div>

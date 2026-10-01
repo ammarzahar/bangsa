@@ -15,11 +15,15 @@ class User extends Authenticatable
     use Notifiable;
 
     public const TYPE_USER = 'USER';
+
     public const TYPE_ORGANISER = 'ORGANISER';
+
     public const TYPE_ORGANISER_PLUS = 'ORGANISER_PLUS';
+
     public const TYPE_ADMIN = 'ADMIN';
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -28,6 +32,9 @@ class User extends Authenticatable
         'full_name',
         'account_type',
         'is_platform_owner',
+        'google_id',
+        'avatar_url',
+        'email_verified_at',
     ];
 
     protected $hidden = [

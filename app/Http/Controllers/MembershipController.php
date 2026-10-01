@@ -191,6 +191,7 @@ class MembershipController extends Controller
                         $group->id,
                         $membershipRequest->user->full_name ?: Str::before($membershipRequest->user->email, '@')
                     ),
+                    'photo_url' => $membershipRequest->user->avatar_url,
                     'full_name' => $membershipRequest->user->full_name ?: $membershipRequest->user->email,
                 ]
             );

@@ -6,7 +6,11 @@
 @endphp
 
 <button id="userDropdownButton" data-dropdown-toggle="userDropdown" data-dropdown-placement="bottom-end" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100" type="button">
-    <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">{{ $initial }}</span>
+    @if($user->avatar_url)
+        <img src="{{ $user->avatar_url }}" alt="" referrerpolicy="no-referrer" class="h-7 w-7 rounded-full object-cover">
+    @else
+        <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">{{ $initial }}</span>
+    @endif
     <span class="hidden sm:block">{{ $user->full_name ?? $user->email }}</span>
     <svg class="h-3 w-3" aria-hidden="true" fill="none" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
         <path d="m1 1 4 4 4-4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>

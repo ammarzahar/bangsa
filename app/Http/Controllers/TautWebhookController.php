@@ -75,6 +75,7 @@ class TautWebhookController extends Controller
                 ['group_id' => $group->id, 'user_id' => $user->id],
                 [
                     'username' => $this->uniqueUsername($group->id, $user->full_name ?: Str::before($user->email, '@')),
+                    'photo_url' => $user->avatar_url,
                     'full_name' => $user->full_name ?: $user->email,
                 ]
             );
